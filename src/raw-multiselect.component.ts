@@ -13,13 +13,18 @@ import {
 
 import {FilterPipe} from "./raw-multiselect.pipe";
 
-let styles = `.rawMSButton {
-    border-radius: 4px;
-    background: white;
-    padding: 8px;
-    background-image: linear-gradient(#FFF, #F2F2F2);
-}
+let styles = `
 
+.filter-groups {
+    //width: 150px;
+    text-align: left;
+    color: #777;
+}
+.rawMSButton.filter-groups .caret{
+    position: relative;
+    top: 0px;
+    color: #777;
+}
 .rawMSInput {
     border-radius: 4px;
     padding: 8px;
@@ -34,11 +39,13 @@ let styles = `.rawMSButton {
     border: 1px solid rgba(0, 0, 0, .15);
     border-radius: 4px;
     box-shadow: 0 6px 12px rgba(0, 0, 0, .15);
+    left: 61px;
 }
 
 .rawMSControllerBox, .rawMSOptionsBox {
     padding: 15px;
     margin: 0;
+    width: 184px;
 }
 
 .rawMSControllerBox {
@@ -65,18 +72,14 @@ h4.option {
     cursor: pointer;
 }
 
-.option.selected {
-    background-color: rgba(214, 214, 214, 1)
-}
 
 .option.listItem {
     display: inline-block;
     margin-right: 10px;
-    min-width: 200px;
+    min-width: 100%;
     padding: 4px;
-    border-radius: 4px;
-    border: 1px solid #c3c3c3;
 }
+
 
 
 /*Utility Classes*/
@@ -87,41 +90,47 @@ h4.option {
 
 .rawMSLeft {
     float: left;
-}`;
+    padding-right: 6px;
+}
+.option-name {
+    float: left;
+}
+.dropdown-wrapper{
+    position: relative;
+    float: left;
+    padding-left: 39px;
+}
+`;
 
-let template = `<button (click)="dropDownVisible=!dropDownVisible;" class="rawMSButton">
-    <template ngIf="selectedItems.length > 0">
-        <span *ngFor="let val of selectedItems; let isLast=last">
-                {{val[displayKey]}}{{isLast ? '&#9660;' : ', '}}
-        </span>
-    </template>
-    <span *ngIf="selectedItems.length === 0">None Selected</span>
-</button>
-<div *ngIf="dropDownVisible" class="rawMSDropDown">
-    <div class="rawMSControllerBox">
-        <div>
-            <input type="search" [(ngModel)]="filterVal" class="rawMSInput" placeholder="Filter Options">
-        </div>
-        <div>
-            <button (click)="selectAll();" class="rawMSButton">All</button>
-            <button (click)="selectNone();" class="rawMSButton">None</button>
-        </div>
-    </div>
-    <div *ngIf="inbound.length > 0" class="rawMSOptionsBox">
-        <div *ngFor="let group of groups" (click)="toggleSelection(group);" class="rawMSGroup">
-            <h4 class="option" [ngClass]="{selected: group.rawMSSelected}" *ngIf="groups[0].name!=='rawMSPlaceHolderGroup';">{{group.rawMSName}}
-                <span class="rawMSRight" *ngIf="group.rawMSSelected">&#10003;</span>
-            </h4>
-            <template ngFor let-option [ngForOf]="inbound | filter:filterVal:displayKey">
-                <div *ngIf="option[groupBy] === group.rawMSName || groups[0]['displayKey']==='rawMSPlaceHolderGroup';" (click)="toggleSelection(option, $event);"
-                    class="option listItem" [ngClass]="{selected: option.rawMSSelected}">
-                    {{option[displayKey]}}
-                    <span class="rawMSRight" *ngIf="option.rawMSSelected">&#10003;</span>
-                </div>
-            </template>
-        </div>
-    </div>
-</div>`;
+let template = `
+      <div class ="dropdown-wrapper">
+          <button (click)="dropDownVisible=!dropDownVisible;" class="rawMSButton btn btn-default filter-groups">
+             <template ngIf="selectedItems.length > 0">
+             <!-- <span *ngFor="let val of selectedItems; let isLast=last">
+                      {{val[displayKey]}}{{isLast ? '' : ', '}}
+              </span>-->
+            
+              <span >{{title}}</span>
+              <span class="caret"></span>
+               </template>
+          </button>
+          <div *ngIf="dropDownVisible" class="rawMSDropDown">
+              <div *ngIf="inbound.length > 0" class="rawMSOptionsBox">
+                  <div *ngFor="let group of groups" (click)="toggleSelection(group);" class="rawMSGroup">
+                      <h4 class="option" [ngClass]="{selected: group.rawMSSelected}" *ngIf="groups[0].name!=='rawMSPlaceHolderGroup';">{{group.rawMSName}}
+                          <span class="rawMSRight" *ngIf="group.rawMSSelected">&#10003;</span>
+                      </h4>
+                      <template ngFor let-option [ngForOf]="inbound | filter:filterVal:displayKey">
+                          <div *ngIf="option[groupBy] === group.rawMSName || groups[0]['displayKey']==='rawMSPlaceHolderGroup';" (click)="toggleSelection(option, $event);"
+                              class="option listItem" [ngClass]="{selected: option.rawMSSelected}">
+                             <span class="rawMSLeft glyphicon glyphicon-ok" *ngIf="option.rawMSSelected"></span>
+                             <span class="option-name">{{option[displayKey]}}</span> 
+                          </div>
+                      </template>
+                  </div>
+              </div>
+          </div>
+      </div>`;
 
 @Component({
   selector: "raw-multiselect",
@@ -141,12 +150,14 @@ export class MultiSelectComponent implements OnInit {
   @Input() displayKey: String;
   @Input() allSelected: Boolean;
   @Input() groupBy: string;
+  @Input() filterTitle: any;
 
-  @Output() outbound: EventEmitter<Array<any>> = new EventEmitter();
+  @Output() outbound: EventEmitter<any> = new EventEmitter();
 
   groups: Array<any>;
   dropDownVisible: boolean = false;
   selectedItems: Array<any>;
+  public title: string;
 
   constructor(private _eref: ElementRef) {
     this.selectedItems = [];
@@ -263,5 +274,6 @@ export class MultiSelectComponent implements OnInit {
     if (this.allSelected) {
       this.selectAll();
     }
+    this.title = this.filterTitle;
   }
 };
