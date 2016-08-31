@@ -8,7 +8,9 @@ import {
   Output,
   EventEmitter,
   OnInit,
-  ElementRef
+  ElementRef,
+  OnChanges,
+  SimpleChange
 } from "@angular/core";
 
 import {FilterPipe} from "./raw-multiselect.pipe";
@@ -45,7 +47,7 @@ let styles = `
 .rawMSControllerBox, .rawMSOptionsBox {
     padding: 15px;
     margin: 0;
-    width: 184px;
+    width: 207px;
 }
 
 .rawMSControllerBox {
@@ -100,21 +102,23 @@ h4.option {
     float: left;
     padding-left: 39px;
 }
+.clear-filter {
+    cursor: pointer;
+    padding-left: 10px;
+    position: relative;
+    top: 5px;
+}
 `;
 
 let template = `
       <div class ="dropdown-wrapper">
-          <button (click)="dropDownVisible=!dropDownVisible;" class="rawMSButton btn btn-default filter-groups">
-             <template ngIf="selectedItems.length > 0">
-             <!-- <span *ngFor="let val of selectedItems; let isLast=last">
-                      {{val[displayKey]}}{{isLast ? '' : ', '}}
-              </span>-->
-            
-              <span >{{title}}</span>
+          <button (click)="dropDownVisible=!dropDownVisible;" class="rawMSButton btn btn-default filter-groups" [class.disabled] ="!showRefine">
+              <span *ngIf ="!showMutliple && (selectedItems.length !==0 || selectedItems.length >0)">{{oneSelected}}</span>
+              <span *ngIf="showMutliple">{{titleMultipleSelected}}</span>
+              <span *ngIf="selectedItems.length === 0 && !showMutliple ">{{title}}</span>
               <span class="caret"></span>
-               </template>
           </button>
-          <div *ngIf="dropDownVisible" class="rawMSDropDown">
+          <div *ngIf="dropDownVisible && showRefine" class="rawMSDropDown">
               <div *ngIf="inbound.length > 0" class="rawMSOptionsBox">
                   <div *ngFor="let group of groups" (click)="toggleSelection(group);" class="rawMSGroup">
                       <h4 class="option" [ngClass]="{selected: group.rawMSSelected}" *ngIf="groups[0].name!=='rawMSPlaceHolderGroup';">{{group.rawMSName}}
@@ -130,6 +134,7 @@ let template = `
                   </div>
               </div>
           </div>
+          <span class="clear-filter" (click)="notifyClearToParent()">{{clearFiltersText}}</span>
       </div>`;
 
 @Component({
@@ -151,13 +156,23 @@ export class MultiSelectComponent implements OnInit {
   @Input() allSelected: Boolean;
   @Input() groupBy: string;
   @Input() filterTitle: any;
+  @Input() multipleSelected: any;
+  @Input() showRefine: boolean;
+  @Input() clearFiltersTitle: string;
+  @Input() clearFilterObj: any;
 
   @Output() outbound: EventEmitter<any> = new EventEmitter();
+  @Output() clearAllFilters: EventEmitter<any> = new EventEmitter();
 
   groups: Array<any>;
   dropDownVisible: boolean = false;
   selectedItems: Array<any>;
   public title: string;
+  public titleMultipleSelected: string;
+  public clearFiltersText: string;
+  public showMutliple: boolean = false;
+  public oneSelected: string;
+  public subscription: any;
 
   constructor(private _eref: ElementRef) {
     this.selectedItems = [];
@@ -209,6 +224,12 @@ export class MultiSelectComponent implements OnInit {
   selectItem(item) {
     item.rawMSSelected = true;
     this.selectedItems = [...this.selectedItems, item];
+
+    if(this.selectedItems.length > 1){
+      this.showMutliple = true;
+    } else if(this.selectedItems.length === 1 ){
+      this.oneSelected = this.selectedItems[0].name;
+    }
   }
 
   deselectItem(item) {
@@ -218,6 +239,23 @@ export class MultiSelectComponent implements OnInit {
       ...this.selectedItems.slice(0, index),
       ...this.selectedItems.slice(index + 1)
     ];
+    this.showMutliple = false;
+  }
+  clearFilters (){
+    let that: MultiSelectComponent = this;
+    this.selectedItems.forEach(function (item) {
+      item.rawMSSelected = false;
+      const index = that.selectedItems.indexOf(item);
+      that.selectedItems = [
+        ...that.selectedItems.slice(0, index),
+        ...that.selectedItems.slice(index + 1)
+      ];
+    })
+    this.showMutliple = false;
+    return this.selectedItems;
+  }
+  notifyClearToParent () {
+    this.clearAllFilters.emit();
   }
 
   selectAll() {
@@ -268,12 +306,26 @@ export class MultiSelectComponent implements OnInit {
       this.dropDownVisible = false;
     }
   }
-
+   handleEvent(data) {
+     switch (data.type) {
+       case "clear":
+         this.notifyClearToParent();
+         break;
+       default:
+         break;
+     }
+   }
   ngOnInit() {
     this.createGroups();
     if (this.allSelected) {
       this.selectAll();
     }
     this.title = this.filterTitle;
+    this.titleMultipleSelected = this.multipleSelected;
+    this.clearFiltersText = this.clearFiltersTitle;
+    this.subscription = this.clearFilterObj.notifyChildemitter.subscribe((data) => {
+      this.handleEvent(data);
+    });
   }
+
 };
