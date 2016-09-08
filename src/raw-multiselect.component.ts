@@ -255,6 +255,7 @@ export class MultiSelectComponent implements OnInit {
     return this.selectedItems;
   }
   notifyClearToParent () {
+    this.clearFilters();
     this.clearAllFilters.emit();
   }
 
