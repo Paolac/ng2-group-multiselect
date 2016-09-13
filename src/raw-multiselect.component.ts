@@ -239,7 +239,14 @@ export class MultiSelectComponent implements OnInit {
       ...this.selectedItems.slice(0, index),
       ...this.selectedItems.slice(index + 1)
     ];
-    this.showMutliple = false;
+    if (this.selectedItems.length === 1) {
+      this.oneSelected = this.selectedItems[0].name;
+      this.showMutliple = false;
+    } else if (this.selectedItems.length === 0) {
+      this.showMutliple = false;
+    } else {
+      this.showMutliple = true;
+    }
   }
   clearFilters (){
     let that: MultiSelectComponent = this;
