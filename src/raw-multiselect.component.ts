@@ -10,7 +10,8 @@ import {
   OnInit,
   ElementRef,
   OnChanges,
-  SimpleChange
+  SimpleChange,
+  HostListener
 } from "@angular/core";
 
 import {FilterPipe} from "./raw-multiselect.pipe";
@@ -120,9 +121,9 @@ let template = `
           </button>
           <div *ngIf="dropDownVisible && showRefine" class="rawMSDropDown">
               <div *ngIf="inbound.length > 0" class="rawMSOptionsBox">
-                  <div *ngFor="let group of groups" (click)="toggleSelection(group);" class="rawMSGroup">
+                  <div *ngFor="let group of groups" class="rawMSGroup">
                       <h4 class="option" [ngClass]="{selected: group.rawMSSelected}" *ngIf="groups[0].name!=='rawMSPlaceHolderGroup';">{{group.rawMSName}}
-                          <span class="rawMSRight" *ngIf="group.rawMSSelected">&#10003;</span>
+                          <span class="rawMSRight" *ngIf="group.rawMSSelected" (click)="toggleSelection(group);">&#10003;</span>
                       </h4>
                       <template ngFor let-option [ngForOf]="inbound | filter:filterVal:displayKey">
                           <div *ngIf="option[groupBy] === group.rawMSName || groups[0]['displayKey']==='rawMSPlaceHolderGroup';" (click)="toggleSelection(option, $event);"
@@ -140,9 +141,6 @@ let template = `
 @Component({
   selector: "raw-multiselect",
   directives: [],
-  host: {
-    "(document:click)": "collapse($event)",
-  },
   // Global styles imported in the app component.
   encapsulation: ViewEncapsulation.None,
   styles: [styles],
@@ -163,6 +161,10 @@ export class MultiSelectComponent implements OnInit {
 
   @Output() outbound: EventEmitter<any> = new EventEmitter();
   @Output() clearAllFilters: EventEmitter<any> = new EventEmitter();
+  @HostListener ("document:click", ["$event"]) onClick($event) {
+    this.collapse($event);
+
+  }
 
   groups: Array<any>;
   dropDownVisible: boolean = false;
@@ -203,7 +205,7 @@ export class MultiSelectComponent implements OnInit {
       if (this.groups.length > 0) {
         this.checkGroupSelected(item[this.groupBy]);
       }
-      event.stopPropagation();
+      //event.stopPropagation();
     }
     this.notifyParent();
   }
@@ -308,10 +310,10 @@ export class MultiSelectComponent implements OnInit {
     }
   }
 
-  collapse() {
+  collapse(event) {
     // Checks to see if click is inside element; if not, collapse element
     if (!this._eref.nativeElement.contains(event.target)) {
-      this.dropDownVisible = false;
+        this.dropDownVisible = false;
     }
   }
    handleEvent(data) {
