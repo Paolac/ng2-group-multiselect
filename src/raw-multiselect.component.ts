@@ -14,8 +14,6 @@ import {
   HostListener
 } from "@angular/core";
 
-import {FilterPipe} from "./raw-multiselect.pipe";
-
 let styles = `
 
 .filter-groups {
@@ -125,7 +123,7 @@ let template = `
                       <h4 class="option" [ngClass]="{selected: group.rawMSSelected}" *ngIf="groups[0].name!=='rawMSPlaceHolderGroup';">{{group.rawMSName}}
                           <span class="rawMSRight" *ngIf="group.rawMSSelected" (click)="toggleSelection(group);">&#10003;</span>
                       </h4>
-                      <template ngFor let-option [ngForOf]="inbound | filter:filterVal:displayKey">
+                      <template ngFor let-option [ngForOf]="inbound">
                           <div *ngIf="option[groupBy] === group.rawMSName || groups[0]['displayKey']==='rawMSPlaceHolderGroup';" (click)="toggleSelection(option, $event);"
                               class="option listItem" [ngClass]="{selected: option.rawMSSelected}">
                              <span class="rawMSLeft glyphicon glyphicon-ok" *ngIf="option.rawMSSelected"></span>
@@ -145,7 +143,6 @@ let template = `
   encapsulation: ViewEncapsulation.None,
   styles: [styles],
   template: template,
-  pipes: [FilterPipe]
 })
 
 export class MultiSelectComponent implements OnInit {

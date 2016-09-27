@@ -1,2 +1,3 @@
 import { MultiSelectComponent } from "./raw-multiselect.component.ts";
-export { MultiSelectComponent };
+import { FilterPipe } from  "./raw-multiselect.pipe.ts";
+export { MultiSelectComponent, FilterPipe };
