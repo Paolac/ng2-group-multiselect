@@ -138,7 +138,6 @@ let template = `
 
 @Component({
   selector: "raw-multiselect",
-  directives: [],
   // Global styles imported in the app component.
   encapsulation: ViewEncapsulation.None,
   styles: [styles],
